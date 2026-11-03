@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Marathon Milestone</title>
+  <link rel="stylesheet" href="css/overlay.css">
+</head>
+<body>
+  <div class="milestone" id="panel">
+    <div class="ms-title" id="title">Belum ada milestone</div>
+    <div class="ms-count" id="count">0 / 0 Member</div>
+    <div class="bar"><div class="bar-fill" id="fill"></div></div>
+    <div class="ms-foot">
+      <div id="remaining"></div>
+      <div class="ms-reward" id="reward">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 3V2H6v1H2v4a5 5 0 0 0 4.6 5A6 6 0 0 0 11 15.9V19H7v3h10v-3h-4v-3.1A6 6 0 0 0 17.4 12 5 5 0 0 0 22 7V3h-4ZM4 7V5h2v4.8A3 3 0 0 1 4 7Zm16 0a3 3 0 0 1-2 2.8V5h2v2Z"/></svg>
+        <span id="rewardText">0 Minutes</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/ws-client.js"></script>
+  <script>
+    const q = Marathon.applyQueryStyle();
+    // ?unit=Gift Member mengganti satuan, ?reward=0 menyembunyikan bonus waktu di pojok kanan bawah.
+    const UNIT = q.get('unit') || 'Member';
+    if (q.get('reward') === '0') document.getElementById('reward').hidden = true;
+
+    const panel = document.getElementById('panel');
+    const titleEl = document.getElementById('title');
+    const countEl = document.getElementById('count');
+    const fillEl = document.getElementById('fill');
+    const remainingEl = document.getElementById('remaining');
+    const rewardTextEl = document.getElementById('rewardText');
+    let lastReached = null;
+
+    function render(s) {
+      const m = s.milestones;
+      // Tampilkan milestone yang sedang dikejar; kalau semua tercapai, tampilkan yang terakhir.
+      const shown = m.next || m.list[m.list.length - 1];
+
+      if (!shown) {
+        titleEl.textContent = 'Belum ada milestone';
+        countEl.textContent = `${s.memberCount} ${UNIT}`;
+        fillEl.style.width = '0%';
+        remainingEl.textContent = '';
+        rewardTextEl.textContent = '0 Minutes';
+        return;
+      }
+
+      titleEl.textContent = shown.label || `${shown.target} ${UNIT}`;
+      countEl.textContent = `${Math.min(s.memberCount, shown.target)} / ${shown.target} ${UNIT}`;
+      // Progress dihitung dari 0 ke target, sama seperti teks "823 / 1000".
+      fillEl.style.width = `${Math.min(1, s.memberCount / shown.target) * 100}%`;
+
+      const left = shown.target - s.memberCount;
+      remainingEl.textContent = left > 0
+        ? `${left} ${UNIT.toLowerCase()} remaining to achieve`
+        : 'Milestone achieved!';
+      rewardTextEl.textContent = `${shown.bonusMinutes || 0} Minutes`;
+
+      // Animasi saat milestone baru tercapai (bukan saat halaman baru dibuka).
+      if (lastReached !== null && m.reachedCount > lastReached) {
+        panel.classList.remove('celebrate');
+        void panel.offsetWidth;
+        panel.classList.add('celebrate');
+      }
+      lastReached = m.reachedCount;
+    }
+
+    Marathon.connect({ state: render });
+  </script>
+</body>
+</html>

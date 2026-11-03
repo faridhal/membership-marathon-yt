@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Marathon Timer</title>
+  <link rel="stylesheet" href="css/overlay.css">
+</head>
+<body>
+  <div class="timer-wrap">
+    <div class="timer-title" id="title" hidden></div>
+    <div class="stage" id="stage">
+      <div class="clock" id="clock">
+        <div class="group"><div class="num" id="h"><span>0</span><span>0</span></div><div class="cap" id="capH">Hours</div></div>
+        <div class="colon">:</div>
+        <div class="group"><div class="num" id="m"><span>0</span><span>0</span></div><div class="cap" id="capM">Minutes</div></div>
+        <div class="colon">:</div>
+        <div class="group"><div class="num" id="s"><span>0</span><span>0</span></div><div class="cap" id="capS">Seconds</div></div>
+      </div>
+      <div class="event" id="event">
+        <div class="ev-plus" id="evPlus"></div>
+        <div class="ev-name" id="evName"></div>
+        <div class="ev-kind" id="evKind"></div>
+      </div>
+    </div>
+    <div class="status" id="status" hidden></div>
+  </div>
+
+  <script src="js/ws-client.js"></script>
+  <script>
+    const q = Marathon.applyQueryStyle();
+    const ALERT_MS = Number(q.get('alertMs')) || 5000;
+    const SWAP_MS = 600; // lama transisi event → timer sebelum event berikutnya boleh tampil
+
+    // ?caps=JAM,MENIT,DETIK untuk mengganti teks di bawah angka, ?caps= (kosong) untuk menyembunyikan.
+    if (q.has('caps')) {
+      const caps = q.get('caps').split(',');
+      ['capH', 'capM', 'capS'].forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.textContent = caps[i] || '';
+        el.hidden = !caps[i];
+      });
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const stage = $('stage');
+    let current = null;
+
+    // Judul diatur dari control panel; ?label= di URL menimpanya. Kosong = disembunyikan.
+    function setTitle(text) {
+      const value = q.has('label') ? q.get('label') : text;
+      $('title').textContent = value || '';
+      $('title').hidden = !value;
+    }
+
+    // Satu <span> per digit (lihat .clock .num span di overlay.css).
+    function setDigits(el, text) {
+      while (el.children.length < text.length) el.append(document.createElement('span'));
+      while (el.children.length > text.length) el.lastChild.remove();
+      [...text].forEach((d, i) => {
+        if (el.children[i].textContent !== d) el.children[i].textContent = d;
+      });
+    }
+
+    function render() {
+      if (current) {
+        const ms = Marathon.remainingMs(current);
+        const [h, m, s] = Marathon.splitTime(ms);
+        setDigits($('h'), h);
+        setDigits($('m'), m);
+        setDigits($('s'), s);
+        const ended = ms <= 0;
+        $('clock').classList.toggle('paused', !current.running && !ended);
+        const status = ended ? 'SELESAI' : current.running ? '' : 'PAUSED';
+        $('status').textContent = status;
+        $('status').hidden = !status;
+      }
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+
+    // Event masuk: timer disembunyikan sementara dan diganti info event di tempat yang sama.
+    // Event diantrikan supaya tampil satu per satu saat banyak member join bersamaan.
+    const queue = [];
+    let showing = false;
+
+    function kindText(a) {
+      const tier = a.tier ? ` · ${a.tier}` : '';
+      if (a.kind === 'gift') return `Gift ${a.count} member${tier}`;
+      if (a.kind === 'upgrade') return `Upgrade${tier}`;
+      if (a.kind === 'milestone') return `Perpanjang member${tier}`;
+      if (a.kind === 'bonus') return 'Milestone tercapai!';
+      return `Member baru${tier}`;
+    }
+
+    function showNext() {
+      if (showing || !queue.length) return;
+      showing = true;
+      const a = queue.shift();
+
+      $('evPlus').textContent = a.seconds > 0 ? Marathon.formatAdded(a.seconds) : '♥';
+      $('evName').textContent = a.author;
+      $('evKind').textContent = kindText(a);
+      stage.classList.add('alerting');
+
+      setTimeout(() => {
+        stage.classList.remove('alerting');
+        setTimeout(() => {
+          showing = false;
+          showNext();
+        }, SWAP_MS);
+      }, ALERT_MS);
+    }
+
+    Marathon.connect({
+      state(s) { current = s; },
+      config(c) { setTitle(c.title); },
+      alert(a) {
+        if (q.get('alerts') === '0') return;
+        queue.push(a);
+        showNext();
+      },
+    });
+  </script>
+</body>
+</html>

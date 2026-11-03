@@ -1,0 +1,32 @@
+{
+  "title": "IMPACTHON",
+  "source": "scraper",
+  "channel": "",
+  "giftTier": "",
+  "tiers": [
+    {
+      "name": "Anak Bontot",
+      "seconds": 300
+    },
+    {
+      "name": "Anak Sulung Papi",
+      "seconds": 600
+    },
+    {
+      "name": "Sultan",
+      "seconds": 1800
+    }
+  ],
+  "defaultSeconds": 300,
+  "countUpgrades": true,
+  "milestoneChatSeconds": 0,
+  "pollIntervalSec": 20,
+  "maxDurationSec": 0,
+  "milestones": [
+    {
+      "target": 1000,
+      "label": "BAYARIN SPP 5 ANAK SEKOLAH NEGERI UNTUK 1 BULAN",
+      "bonusMinutes": 0
+    }
+  ]
+}

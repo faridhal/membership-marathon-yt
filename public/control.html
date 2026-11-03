@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marathon Control</title>
+  <style>
+    :root {
+      --bg: #12131a; --card: #1c1e28; --line: #2c2f3d; --text: #e9eaf0; --muted: #9094a6;
+      --accent: #ff4d6d; --ok: #3ccf8e; --warn: #ffb547;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; }
+    header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    header h1 { font-size: 18px; margin: 0; }
+    #conn { font-size: 12px; color: var(--muted); }
+    main { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; padding: 16px 24px 40px; }
+    section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+    section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 12px; }
+    .big { font-size: 48px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+    button { background: #2a2d3b; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; font: inherit; }
+    button:hover { border-color: var(--muted); }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    button.danger { color: var(--accent); }
+    input, select { background: #12131a; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font: inherit; min-width: 0; }
+    input[type=number] { width: 90px; }
+    input[type=checkbox] { width: auto; }
+    label { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { padding: 4px; text-align: left; }
+    th { color: var(--muted); font-weight: 500; font-size: 12px; }
+    td input { width: 100%; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; background: #2a2d3b; }
+    .pill.ok { background: rgba(60, 207, 142, .15); color: var(--ok); }
+    .pill.bad { background: rgba(255, 77, 109, .15); color: var(--accent); }
+    .err { color: var(--accent); font-size: 12px; white-space: pre-wrap; }
+    .log { max-height: 320px; overflow: auto; font-size: 13px; }
+    .log div { padding: 5px 0; border-bottom: 1px solid var(--line); }
+    .links code { display: block; background: #12131a; padding: 6px 8px; border-radius: 6px; margin: 4px 0 10px; user-select: all; overflow-wrap: anywhere; }
+    .bar { height: 10px; border-radius: 999px; background: #2a2d3b; overflow: hidden; }
+    .bar div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--warn)); width: 0; transition: width .5s; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⏱ Marathon Control</h1>
+    <span id="conn" class="pill bad">Terputus</span>
+  </header>
+
+  <main>
+    <section>
+      <h2>Timer</h2>
+      <div class="big" id="timer">00:00:00</div>
+      <div class="muted" id="timerStatus"></div>
+      <div class="row">
+        <button class="primary" id="btnStart">▶ Start</button>
+        <button id="btnPause">⏸ Pause</button>
+        <button class="danger" id="btnReset">Reset timer</button>
+      </div>
+      <div class="row">
+        <button data-add="-300">−5m</button>
+        <button data-add="-60">−1m</button>
+        <button data-add="60">+1m</button>
+        <button data-add="300">+5m</button>
+        <button data-add="3600">+1j</button>
+      </div>
+      <div class="row">
+        <label>Jam <input type="number" id="setH" min="0" value="1"></label>
+        <label>Menit <input type="number" id="setM" min="0" max="59" value="0"></label>
+        <button id="btnSet">Set waktu</button>
+        <button id="btnAddCustom">Tambah</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Member & Milestone</h2>
+      <div class="big" id="count">0</div>
+      <div class="muted" id="msText"></div>
+      <div class="bar" style="margin:8px 0"><div id="msBar"></div></div>
+      <div class="row">
+        <button data-count="-1">−1</button>
+        <button data-count="1">+1</button>
+        <input type="number" id="setCount" min="0" value="0">
+        <button id="btnSetCount">Set jumlah</button>
+      </div>
+      <div class="row">
+        <button class="danger" id="btnResetAll">Reset marathon (timer, member, log)</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>YouTube</h2>
+      <div class="row">
+        <label>Sumber
+          <select id="ytSource">
+            <option value="scraper">Live chat langsung (tanpa kuota)</option>
+            <option value="api">YouTube API resmi (kuota 10.000/hari)</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">Status: <span id="ytPill" class="pill">-</span></div>
+      <div class="muted" id="ytInfo"></div>
+      <div class="err" id="ytErr"></div>
+      <div class="row" id="apiRow">
+        <a href="/auth"><button id="btnLogin">Login YouTube</button></a>
+        <button class="danger" id="btnLogout">Logout</button>
+      </div>
+      <div class="row">
+        <input id="videoId" placeholder="Video ID / URL / @channel (opsional)" style="flex:1">
+        <button class="primary" id="btnConnect">Connect</button>
+        <button id="btnDisconnect">Disconnect</button>
+      </div>
+      <div class="muted" id="ytHint"></div>
+    </section>
+
+    <section>
+      <h2>Simulasi (tes tanpa live)</h2>
+      <div class="row">
+        <select id="simKind">
+          <option value="new">Member baru</option>
+          <option value="gift">Gift membership</option>
+          <option value="upgrade">Upgrade tier</option>
+          <option value="milestone">Perpanjang (milestone chat)</option>
+        </select>
+        <select id="simTier"></select>
+      </div>
+      <div class="row">
+        <input id="simAuthor" placeholder="Nama" value="Penonton Tes" style="flex:1">
+        <label>Jumlah gift <input type="number" id="simCount" min="1" value="5"></label>
+      </div>
+      <div class="row"><button class="primary" id="btnSim">Kirim event tes</button></div>
+    </section>
+
+    <section style="grid-column: 1 / -1">
+      <h2>Pengaturan</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px">
+        <div>
+          <strong>Tier membership</strong>
+          <div class="muted">Nama harus sama persis dengan nama level di YouTube Studio.</div>
+          <table>
+            <thead><tr><th>Nama tier</th><th>Menit</th><th>Detik</th><th></th></tr></thead>
+            <tbody id="tierRows"></tbody>
+          </table>
+          <button id="btnAddTier">+ Tier</button>
+        </div>
+        <div>
+          <strong>Milestone</strong>
+          <table>
+            <thead><tr><th>Target member</th><th>Hadiah / label</th><th>Bonus menit</th><th></th></tr></thead>
+            <tbody id="msRows"></tbody>
+          </table>
+          <button id="btnAddMs">+ Milestone</button>
+        </div>
+        <div>
+          <strong>Lainnya</strong>
+          <div class="row"><label>Judul timer (kosong = sembunyikan) <input id="cfgTitle" placeholder="MARATHON"></label></div>
+          <div class="row"><label>Channel YouTube <input id="cfgChannel" placeholder="@channelkamu"></label></div>
+          <div class="row"><label>Tier untuk gift membership <select id="cfgGiftTier"></select></label></div>
+          <div class="row"><label>Tier tidak dikenal (detik) <input type="number" id="cfgDefault" min="0"></label></div>
+          <div class="row"><label><input type="checkbox" id="cfgUpgrades"> Upgrade tier menambah waktu</label></div>
+          <div class="row"><label>Perpanjang member (detik) <input type="number" id="cfgMilestoneChat" min="0"></label></div>
+          <div class="row"><label>Batas maks. sisa waktu (menit, 0 = tanpa batas) <input type="number" id="cfgMax" min="0"></label></div>
+          <div class="row"><label>Interval polling YouTube (detik) <input type="number" id="cfgPoll" min="5"></label></div>
+          <div class="muted" id="quotaInfo"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="primary" id="btnSave">Simpan pengaturan</button>
+        <span class="muted" id="saveMsg"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Log event</h2>
+      <div class="log" id="log"></div>
+    </section>
+
+    <section class="links">
+      <h2>URL Browser Source OBS</h2>
+      <div class="muted">Timer (disarankan 900×300)</div>
+      <code id="urlTimer"></code>
+      <div class="muted">Milestone (disarankan 700×200)</div>
+      <code id="urlMs"></code>
+      <div class="muted">Opsi URL: <b>?label=</b>Judul, <b>&amp;color=</b>%23ffffff, <b>&amp;accent=</b>%23ff4d6d, <b>&amp;size=</b>88, <b>&amp;font=</b>Rubik, <b>&amp;alertMs=</b>5000</div>
+    </section>
+  </main>
+
+  <script src="js/ws-client.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let current = null;
+    let cfg = null;
+
+    async function api(path, body) {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {}),
+      });
+      const json = await res.json();
+      if (!json.ok) alert(json.error);
+      return json;
+    }
+
+    // --- Timer ---
+    $('btnStart').onclick = () => api('/api/timer/start');
+    $('btnPause').onclick = () => api('/api/timer/pause');
+    $('btnReset').onclick = () => confirm('Reset timer ke 00:00:00?') && api('/api/timer/reset');
+    document.querySelectorAll('[data-add]').forEach((b) => {
+      b.onclick = () => api('/api/timer/add', { seconds: Number(b.dataset.add) });
+    });
+    const customSeconds = () => (Number($('setH').value) || 0) * 3600 + (Number($('setM').value) || 0) * 60;
+    $('btnSet').onclick = () => api('/api/timer/set', { seconds: customSeconds() });
+    $('btnAddCustom').onclick = () => api('/api/timer/add', { seconds: customSeconds() });
+
+    function tick() {
+      if (current) {
+        const ms = Marathon.remainingMs(current);
+        $('timer').textContent = Marathon.formatTime(ms);
+        $('timerStatus').textContent = ms <= 0 ? 'Timer habis / belum di-set' : current.running ? 'Berjalan' : 'Pause';
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    // --- Member ---
+    document.querySelectorAll('[data-count]').forEach((b) => {
+      b.onclick = () => api('/api/count', { delta: Number(b.dataset.count) });
+    });
+    $('btnSetCount').onclick = () => api('/api/count', { set: Number($('setCount').value) });
+    $('btnResetAll').onclick = () =>
+      confirm('Mulai marathon baru? Timer, jumlah member, dan log akan dikosongkan.') && api('/api/reset-all');
+
+    // --- YouTube ---
+    $('btnConnect').onclick = () => api('/api/youtube/connect', { videoId: $('videoId').value });
+    $('btnDisconnect').onclick = () => api('/api/youtube/disconnect');
+    $('btnLogout').onclick = () => confirm('Logout dari YouTube?') && api('/api/youtube/logout');
+
+    // Ganti sumber langsung menyimpan config (field lain tetap dari config terakhir).
+    $('ytSource').onchange = () => api('/api/config', { ...cfg, source: $('ytSource').value });
+
+    function renderYoutube(y) {
+      const pill = $('ytPill');
+      const isApi = y.source === 'api';
+      $('ytSource').value = y.source;
+      $('apiRow').hidden = !isApi;
+      $('quotaInfo').hidden = !isApi;
+      $('ytHint').textContent = isApi
+        ? 'Kosongkan untuk otomatis memakai siaran live yang sedang aktif di channel yang login.'
+        : 'Kosongkan untuk otomatis mencari live di Channel (Pengaturan). Tidak perlu login.';
+
+      if (!isApi) {
+        pill.textContent = y.connected ? 'Terhubung ke live chat' : 'Belum connect';
+        pill.className = y.connected ? 'pill ok' : 'pill';
+        const info = [];
+        if (y.title) info.push(`Live: ${y.title}`);
+        if (y.videoId) info.push(`Video: ${y.videoId}`);
+        if (y.lastPollAt) info.push(`Cek terakhir: ${new Date(y.lastPollAt).toLocaleTimeString()}`);
+        $('ytInfo').textContent = info.join(' · ');
+        $('ytErr').textContent = y.lastError || '';
+        return;
+      }
+
+      if (!y.hasCredentials) {
+        pill.textContent = 'credentials.json belum ada';
+        pill.className = 'pill bad';
+      } else if (!y.authorized) {
+        pill.textContent = 'Belum login';
+        pill.className = 'pill bad';
+      } else if (y.connected) {
+        pill.textContent = 'Terhubung ke live chat';
+        pill.className = 'pill ok';
+      } else {
+        pill.textContent = 'Login OK, belum connect';
+        pill.className = 'pill';
+      }
+      const info = [];
+      if (y.title) info.push(`Live: ${y.title}`);
+      if (y.lastPollAt) info.push(`Poll terakhir: ${new Date(y.lastPollAt).toLocaleTimeString()}`);
+      info.push(`Kuota terpakai hari ini ≈ ${y.unitsToday} / 10.000 unit`);
+      $('ytInfo').textContent = info.join(' · ');
+      $('ytErr').textContent = y.lastError || '';
+      $('quotaInfo').textContent =
+        `Dengan interval ini: ≈ ${y.unitsPerHour} unit/jam → kuota default 10.000 cukup ±${y.hoursUntilDefaultQuota} jam.`;
+    }
+
+    // --- Simulasi ---
+    $('btnSim').onclick = () =>
+      api('/api/simulate', {
+        kind: $('simKind').value,
+        tier: $('simTier').value,
+        author: $('simAuthor').value,
+        count: Number($('simCount').value),
+      });
+
+    // --- Pengaturan ---
+    function tierRow(t = { name: '', seconds: 300 }) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input class="t-name"></td><td><input type="number" class="t-min" min="0"></td>
+        <td><input type="number" class="t-sec" min="0" max="59"></td><td><button class="danger">✕</button></td>`;
+      tr.querySelector('.t-name').value = t.name;
+      tr.querySelector('.t-min').value = Math.floor(t.seconds / 60);
+      tr.querySelector('.t-sec').value = t.seconds % 60;
+      tr.querySelector('button').onclick = () => tr.remove();
+      return tr;
+    }
+
+    function msRow(m = { target: '', label: '', bonusMinutes: 0 }) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input type="number" class="m-target" min="1"></td><td><input class="m-label"></td>
+        <td><input type="number" class="m-bonus" min="0"></td><td><button class="danger">✕</button></td>`;
+      tr.querySelector('.m-target').value = m.target;
+      tr.querySelector('.m-label').value = m.label;
+      tr.querySelector('.m-bonus').value = m.bonusMinutes || 0;
+      tr.querySelector('button').onclick = () => tr.remove();
+      return tr;
+    }
+
+    $('btnAddTier').onclick = () => $('tierRows').append(tierRow());
+    $('btnAddMs').onclick = () => $('msRows').append(msRow());
+
+    function renderConfig(c) {
+      cfg = c;
+      $('tierRows').replaceChildren(...c.tiers.map(tierRow));
+      $('msRows').replaceChildren(...c.milestones.map(msRow));
+      $('cfgTitle').value = c.title;
+      $('cfgChannel').value = c.channel;
+      $('cfgGiftTier').replaceChildren(
+        new Option('(tier pertama)', ''),
+        ...c.tiers.map((t) => new Option(t.name, t.name))
+      );
+      $('cfgGiftTier').value = c.giftTier;
+      $('cfgDefault').value = c.defaultSeconds;
+      $('cfgUpgrades').checked = c.countUpgrades;
+      $('cfgMilestoneChat').value = c.milestoneChatSeconds;
+      $('cfgMax').value = Math.round(c.maxDurationSec / 60);
+      $('cfgPoll').value = c.pollIntervalSec;
+
+      const sel = $('simTier');
+      const prev = sel.value;
+      sel.replaceChildren(...c.tiers.map((t) => new Option(`${t.name} (${Marathon.formatAdded(t.seconds)})`, t.name)));
+      sel.append(new Option('(tier tidak dikenal)', 'Tier Lain'));
+      if (prev) sel.value = prev;
+    }
+
+    $('btnSave').onclick = async () => {
+      const tiers = [...$('tierRows').children].map((tr) => ({
+        name: tr.querySelector('.t-name').value,
+        seconds: (Number(tr.querySelector('.t-min').value) || 0) * 60 + (Number(tr.querySelector('.t-sec').value) || 0),
+      }));
+      const milestones = [...$('msRows').children].map((tr) => ({
+        target: Number(tr.querySelector('.m-target').value),
+        label: tr.querySelector('.m-label').value,
+        bonusMinutes: Number(tr.querySelector('.m-bonus').value) || 0,
+      }));
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: $('cfgTitle').value,
+          source: cfg.source,
+          channel: $('cfgChannel').value,
+          giftTier: $('cfgGiftTier').value,
+          tiers,
+          milestones,
+          defaultSeconds: Number($('cfgDefault').value),
+          countUpgrades: $('cfgUpgrades').checked,
+          milestoneChatSeconds: Number($('cfgMilestoneChat').value),
+          maxDurationSec: (Number($('cfgMax').value) || 0) * 60,
+          pollIntervalSec: Number($('cfgPoll').value),
+        }),
+      }).then((r) => r.json());
+      $('saveMsg').textContent = res.ok ? `Tersimpan ${new Date().toLocaleTimeString()}` : res.error;
+    };
+
+    // --- Render state ---
+    const kindLabel = { new: 'member baru', gift: 'gift', upgrade: 'upgrade', milestone: 'perpanjang', bonus: 'bonus milestone' };
+
+    function renderState(s) {
+      current = s;
+      $('count').textContent = s.memberCount;
+      const m = s.milestones;
+      $('msText').textContent = m.next
+        ? `${s.memberCount} / ${m.next.target} → ${m.next.label || 'milestone berikut'} (${m.reachedCount}/${m.list.length} tercapai)`
+        : m.allDone ? 'Semua milestone tercapai 🎉' : 'Belum ada milestone';
+      $('msBar').style.width = `${m.progress * 100}%`;
+
+      $('log').replaceChildren(
+        ...s.history.map((h) => {
+          const div = document.createElement('div');
+          const count = h.kind === 'gift' ? ` ×${h.count}` : '';
+          div.textContent =
+            `${new Date(h.at).toLocaleTimeString()} · ${h.author} · ${kindLabel[h.kind] || h.kind}${count}` +
+            `${h.tier ? ` (${h.tier})` : ''} · ${h.seconds ? Marathon.formatAdded(h.seconds) : '+0'}${h.simulated ? ' · TES' : ''}`;
+          return div;
+        })
+      );
+      if (!s.history.length) $('log').textContent = 'Belum ada event.';
+    }
+
+    $('urlTimer').textContent = `${location.origin}/overlay-timer.html`;
+    $('urlMs').textContent = `${location.origin}/overlay-milestone.html`;
+
+    Marathon.connect({
+      open() { $('conn').textContent = 'Terhubung ke server'; $('conn').className = 'pill ok'; },
+      close() { $('conn').textContent = 'Terputus, mencoba lagi…'; $('conn').className = 'pill bad'; },
+      state: renderState,
+      config: renderConfig,
+      youtube: renderYoutube,
+    });
+  </script>
+</body>
+</html>

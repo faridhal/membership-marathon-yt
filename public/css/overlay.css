@@ -1,0 +1,239 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&display=swap');
+
+/* Ubah warna & ukuran di sini, atau lewat query string (?color=&accent=&bg=&font=&size=&width=) */
+:root {
+  --text: #ffffff;
+  --muted: #d6d6d6;
+  --accent: #ffffff;
+  --panel: rgba(28, 28, 30, 0.88);
+  --track: rgba(255, 255, 255, 0.18);
+  --font: 'Poppins', sans-serif;
+  --size: 96px;
+  --width: 420px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+}
+
+/* --- Timer: angka putih polos tanpa card --- */
+.timer-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  text-shadow: var(--shadow);
+}
+
+.timer-title {
+  margin-bottom: calc(var(--size) * 0.02);
+  font-size: calc(var(--size) * 0.24);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Clock dan event menempati area yang sama: saat ada event, clock disembunyikan sementara. */
+.stage {
+  position: relative;
+}
+
+.clock {
+  display: flex;
+  align-items: flex-start;
+  transition: opacity 0.35s ease 0.25s, transform 0.35s ease 0.25s, filter 0.35s ease 0.25s;
+}
+
+.clock .group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clock .num,
+.clock .colon {
+  font-size: var(--size);
+  font-weight: 700;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Poppins tidak punya digit lebar-tetap: tiap digit diberi kotak selebar digit terlebar
+   supaya posisi tidak goyang saat angka berganti. */
+.clock .num {
+  display: flex;
+}
+
+.clock .num span {
+  width: 0.665em;
+  text-align: center;
+}
+
+.clock .colon {
+  padding: 0 0.02em;
+  transform: translateY(-0.05em);
+}
+
+.clock .cap {
+  font-size: calc(var(--size) * 0.15);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.clock.paused {
+  opacity: 0.6;
+}
+
+.event {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.stage.alerting .clock {
+  opacity: 0;
+  transform: scale(0.85);
+  filter: blur(6px);
+  transition-delay: 0s;
+}
+
+.stage.alerting .event {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.3s ease 0.25s, transform 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) 0.25s;
+}
+
+.ev-plus {
+  font-size: calc(var(--size) * 0.7);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stage.alerting .ev-plus {
+  animation: pulse 1.2s ease-in-out 0.6s infinite;
+}
+
+.ev-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: calc(var(--size) * 0.24);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ev-kind {
+  font-size: calc(var(--size) * 0.15);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.status {
+  margin-top: calc(var(--size) * 0.04);
+  font-size: calc(var(--size) * 0.15);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* --- Milestone card --- */
+.milestone {
+  box-sizing: border-box;
+  width: var(--width);
+  padding: 16px 18px 14px;
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.ms-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.ms-count {
+  margin: 10px 0 14px;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.8s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.ms-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.ms-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.ms-reward svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.milestone.celebrate {
+  animation: celebrate 1.2s ease;
+}
+
+@keyframes celebrate {
+  0%, 100% { transform: none; }
+  20% { transform: scale(1.04) rotate(-1deg); }
+  40% { transform: scale(1.04) rotate(1deg); }
+  60% { transform: scale(1.02); }
+}

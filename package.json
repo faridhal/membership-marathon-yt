@@ -1,0 +1,18 @@
+{
+  "name": "marathon-membership-yt",
+  "version": "1.0.0",
+  "description": "Overlay marathon timer YouTube yang bertambah otomatis saat ada member join",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "googleapis": "^144.0.0",
+    "ws": "^8.18.0"
+  }
+}

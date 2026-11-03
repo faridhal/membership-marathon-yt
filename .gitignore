@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Runtime data: state marathon, token OAuth, log event mentah
+data/
+*.tmp
+
+# Rahasia OAuth Google Cloud
+credentials.json
+client_secret*.json
+token.json
+.env
+.env.*
+
+# Log
+*.log
+npm-debug.log*
+
+# Editor / OS / tooling lokal
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
