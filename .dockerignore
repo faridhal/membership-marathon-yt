@@ -1,0 +1,11 @@
+node_modules
+data
+dist
+.git
+.claude
+config.json
+credentials.json
+client_secret*.json
+.env
+.env.*
+*.log

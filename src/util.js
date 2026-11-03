@@ -3,7 +3,9 @@ const path = require('path');
 
 // Folder yang bisa ditulis: root proyek saat `npm start`, atau folder exe saat jalan dari MarathonOverlay.exe
 // (isi exe read-only, jadi config.json, data/ dan credentials.json ada di samping exe).
-const APP_DIR = process.pkg ? path.dirname(process.execPath) : path.join(__dirname, '..');
+// Env APP_DIR menimpanya (mis. /data di Docker).
+const APP_DIR = process.env.APP_DIR
+  || (process.pkg ? path.dirname(process.execPath) : path.join(__dirname, '..'));
 const DATA_DIR = path.join(APP_DIR, 'data');
 
 // Tulis ke file sementara lalu rename, supaya file tidak korup kalau proses mati di tengah penulisan.

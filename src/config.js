@@ -3,6 +3,8 @@ const path = require('path');
 const { APP_DIR, writeJsonAtomic } = require('./util');
 
 const CONFIG_PATH = path.join(APP_DIR, 'config.json');
+// Deploy khusus 1 channel: YT_CHANNEL mengunci channel (tidak bisa diubah dari control panel).
+const ENV_CHANNEL = String(process.env.YT_CHANNEL || '').trim();
 
 const DEFAULTS = {
   title: 'MARATHON',
@@ -46,7 +48,8 @@ function normalize(raw) {
     language: c.language === 'id' ? 'id' : 'en',
     // 'scraper' = baca live chat langsung (tanpa kuota), 'api' = YouTube Data API resmi.
     source: c.source === 'api' ? 'api' : 'scraper',
-    channel: String(c.channel || '').trim(),
+    channel: ENV_CHANNEL || String(c.channel || '').trim(),
+    channelLocked: Boolean(ENV_CHANNEL),
     giftTier: String(c.giftTier || '').trim(),
     tiers: (Array.isArray(c.tiers) ? c.tiers : [])
       .map((t) => ({ name: String(t.name || '').trim(), seconds: toNumber(t.seconds, 0) }))

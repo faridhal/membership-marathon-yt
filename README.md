@@ -223,4 +223,77 @@ Di control panel, bagian **Simulasi**: pilih jenis event & tier → **Kirim even
 
 ## OBS di PC lain
 
-Jalankan dengan `HOST=0.0.0.0` lalu pakai IP PC server di URL overlay. Catatan: control panel tidak memakai password, jadi lakukan ini hanya di jaringan rumah yang kamu percaya.
+Jalankan dengan `HOST=0.0.0.0` lalu pakai IP PC server di URL overlay. Catatan: tanpa `ADMIN_PASSWORD` control panel tidak memakai password, jadi lakukan ini hanya di jaringan rumah yang kamu percaya (atau set `ADMIN_PASSWORD`, lihat bagian cloud di bawah).
+
+## Deploy ke cloud (VM gratis, tanpa PC menyala)
+
+Server bisa dijalankan di VM cloud supaya timer dan deteksi member tetap jalan walau PC mati. OBS cukup memakai URL `https://domainmu/overlay-timer.html`.
+
+### Kenapa VM, bukan Cloudflare Workers / Render?
+
+| Pilihan | Cocok? | Alasan |
+|---|---|---|
+| **Google Cloud e2-micro** (disarankan) | ✅ | Gratis selamanya (Always Free) di region `us-west1`, `us-central1`, `us-east1`. Selalu menyala, disk permanen, kode berjalan apa adanya. |
+| Oracle Cloud Always Free | ⚠️ | Spek lebih besar, tapi Oracle bisa **mengambil kembali instance yang "idle"** (CPU rendah 7 hari), dan aplikasi ini memang hampir idle. Aman kalau akun di-upgrade ke Pay-As-You-Go (tetap gratis dalam batas). |
+| VPS murah ($4–6/bulan: Hetzner, DigitalOcean, dst.) | ✅ | Paling stabil dan mudah. Langkah sama seperti di bawah. |
+| Cloudflare Workers (Free) | ❌ | Harus ditulis ulang; batas CPU 10 ms dan kuota harian mepet untuk marathon 24 jam; IP Cloudflare sering kena bot-check YouTube. |
+| Render / Railway / Koyeb (Free) | ❌ | Tertidur saat tidak ada traffic dan disk hilang saat restart, jadi timer/state bisa hilang. |
+
+Risiko yang berlaku di **semua** cloud: YouTube bisa membatasi IP datacenter. Karena itu jalankan `check-youtube` (langkah 5) sebelum live sungguhan, dan simpan exe/`npm start` di PC sebagai cadangan.
+
+### Pengaturan lewat env (file `.env`)
+
+| Env | Fungsi |
+|---|---|
+| `YT_CHANNEL` | Channel yang dipantau, mis. `@channelkamu`. Dikunci (tidak bisa diubah dari control panel). Server otomatis connect saat channel mulai live (dicek tiap 60 detik). |
+| `ADMIN_PASSWORD` | Password untuk masuk ke control panel. Overlay tetap bisa dibuka tanpa login (untuk OBS). Salah 10× dalam 15 menit = diblokir sementara. |
+| `DOMAIN` | Domain untuk HTTPS. Tanpa domain sendiri: `IP-VM-pakai-strip.sslip.io`, mis. `34-12-56-78.sslip.io`. |
+| `SESSION_SECRET` | Opsional, kunci cookie login. Mengganti `ADMIN_PASSWORD` otomatis mengeluarkan semua sesi. |
+
+Variabel ini juga bisa dipakai di PC (`npm start`): tanpa env, semuanya berjalan seperti biasa.
+
+**Auto-connect** juga aktif tanpa env kalau Channel diisi di Pengaturan. Kalau kamu klik Disconnect, live yang sama tidak di-connect ulang otomatis (klik Connect untuk menyambung lagi); live berikutnya tetap terdeteksi.
+
+### Langkah di Google Cloud
+
+1. Buat akun di <https://console.cloud.google.com/> dan aktifkan billing (butuh kartu untuk verifikasi; e2-micro tetap gratis selama dalam batas Always Free).
+2. **Compute Engine → VM instances → Create instance**:
+   - Region `us-central1` (atau `us-west1` / `us-east1`), machine type **e2-micro**
+   - Boot disk: **Ubuntu 24.04 LTS**, *Standard persistent disk* 30 GB
+   - Firewall: centang **Allow HTTP** dan **Allow HTTPS**
+3. Catat **External IP** VM (mis. `34.12.56.78`). Agar tidak berubah: *VPC network → IP addresses → Reserve* (static IP gratis selama dipakai VM).
+4. Klik **SSH** di VM, lalu pasang Docker:
+
+   ```bash
+   curl -fsSL https://get.docker.com | sudo sh
+   ```
+
+5. Ambil proyek, isi `.env`, lalu cek akses YouTube dari VM:
+
+   ```bash
+   git clone <url-repo-kamu> marathon && cd marathon
+   ```
+
+   ```bash
+   cp .env.example .env && nano .env
+   ```
+
+   ```bash
+   sudo docker compose run --rm app npm run check-youtube
+   ```
+
+   Harus berakhir dengan `OK`. Kalau `GAGAL`, YouTube menolak IP VM ini: pakai PC/exe saja.
+6. Jalankan:
+
+   ```bash
+   sudo docker compose up -d --build
+   ```
+
+7. Buka `https://<DOMAIN>/control.html` → masukkan password. URL overlay untuk OBS ada di bagian bawah control panel.
+
+### Perawatan
+
+- Lihat log: `sudo docker compose logs -f app`
+- Update kode: `git pull && sudo docker compose up -d --build`
+- State & pengaturan ada di folder `data/` di VM (`data/config.json`, `data/data/state.json`). Untuk memindahkan marathon dari PC, salin `config.json` → `data/config.json` dan `data/state.json` → `data/data/state.json`, lalu `sudo docker compose restart app`.
+- Mode YouTube API resmi di cloud: taruh `credentials.json` di `data/`, set redirect URI di Google Cloud ke `https://<DOMAIN>/oauth2callback`.

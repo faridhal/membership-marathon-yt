@@ -14,6 +14,7 @@ client_secret*.json
 token.json
 .env
 .env.*
+!.env.example
 
 # Log
 *.log

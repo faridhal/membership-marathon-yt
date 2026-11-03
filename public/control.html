@@ -10,6 +10,7 @@
       --accent: #ff4d6d; --ok: #3ccf8e; --warn: #ffb547;
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; }
     header { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
     header h1 { font-size: 18px; margin: 0; }
@@ -47,7 +48,8 @@
   <header>
     <h1>⏱ Marathon Control</h1>
     <span id="conn" class="pill bad" data-i18n="cp.disconnected"></span>
-    <select id="uiLang" style="margin-left:auto" aria-label="Language">
+    <button id="btnSignOut" style="margin-left:auto" data-i18n="cp.signOut" hidden></button>
+    <select id="uiLang" aria-label="Language">
       <option value="en">English</option>
       <option value="id">Bahasa Indonesia</option>
     </select>
@@ -236,13 +238,22 @@
 
     $('uiLang').onchange = () => setUiLang($('uiLang').value, true);
 
-    async function api(path, body) {
+    // Sesi login habis (deploy cloud dengan ADMIN_PASSWORD): kembali ke halaman login.
+    async function post(path, body) {
       const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body || {}),
       });
-      const json = await res.json();
+      if (res.status === 401) {
+        location.href = '/login.html';
+        return new Promise(() => {});
+      }
+      return res.json();
+    }
+
+    async function api(path, body) {
+      const json = await post(path, body);
       if (!json.ok) alert(json.error);
       return json;
     }
@@ -302,6 +313,10 @@
         if (y.title) info.push(`Live: ${y.title}`);
         if (y.videoId) info.push(`Video: ${y.videoId}`);
         if (lastCheck) info.push(lastCheck);
+        if (!y.connected && y.autoConnect && y.autoConnect.enabled) {
+          const at = y.autoConnect.lastCheckAt ? new Date(y.autoConnect.lastCheckAt).toLocaleTimeString() : '-';
+          info.push(t('cp.autoWaiting', { channel: y.autoConnect.channel, time: at }));
+        }
         $('ytInfo').textContent = info.join(' · ');
         $('ytErr').textContent = y.lastError || '';
         return;
@@ -371,6 +386,9 @@
       $('cfgLanguage').value = c.language;
       $('cfgTitle').value = c.title;
       $('cfgChannel').value = c.channel;
+      // Channel dikunci dari env YT_CHANNEL di server.
+      $('cfgChannel').disabled = c.channelLocked;
+      $('cfgChannel').title = c.channelLocked ? t('cp.channelLocked') : '';
       const firstTier = new Option(t('cp.firstTier'), '');
       firstTier.dataset.i18n = 'cp.firstTier';
       $('cfgGiftTier').replaceChildren(firstTier, ...c.tiers.map((tier) => new Option(tier.name, tier.name)));
@@ -400,24 +418,20 @@
         label: tr.querySelector('.m-label').value,
         bonusMinutes: Number(tr.querySelector('.m-bonus').value) || 0,
       }));
-      const res = await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: $('cfgTitle').value,
-          language: $('cfgLanguage').value,
-          source: cfg.source,
-          channel: $('cfgChannel').value,
-          giftTier: $('cfgGiftTier').value,
-          tiers,
-          milestones,
-          defaultSeconds: Number($('cfgDefault').value),
-          countUpgrades: $('cfgUpgrades').checked,
-          milestoneChatSeconds: Number($('cfgMilestoneChat').value),
-          maxDurationSec: (Number($('cfgMax').value) || 0) * 60,
-          pollIntervalSec: Number($('cfgPoll').value),
-        }),
-      }).then((r) => r.json());
+      const res = await post('/api/config', {
+        title: $('cfgTitle').value,
+        language: $('cfgLanguage').value,
+        source: cfg.source,
+        channel: $('cfgChannel').value,
+        giftTier: $('cfgGiftTier').value,
+        tiers,
+        milestones,
+        defaultSeconds: Number($('cfgDefault').value),
+        countUpgrades: $('cfgUpgrades').checked,
+        milestoneChatSeconds: Number($('cfgMilestoneChat').value),
+        maxDurationSec: (Number($('cfgMax').value) || 0) * 60,
+        pollIntervalSec: Number($('cfgPoll').value),
+      });
       $('saveMsg').textContent = res.ok ? t('cp.saved', { time: new Date().toLocaleTimeString() }) : res.error;
     };
 
@@ -450,6 +464,10 @@
       );
       if (!s.history.length) $('log').textContent = t('cp.noEvents');
     }
+
+    // Tombol Keluar hanya ada kalau server memakai ADMIN_PASSWORD.
+    fetch('/api/session').then((r) => r.json()).then((s) => { $('btnSignOut').hidden = !s.enabled; });
+    $('btnSignOut').onclick = () => post('/logout').then(() => { location.href = '/login.html'; });
 
     setUiLang(readUiLang());
     $('urlTimer').textContent = `${location.origin}/overlay-timer.html`;

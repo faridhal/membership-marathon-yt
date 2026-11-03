@@ -7,7 +7,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "build:exe": "pkg . --output dist/MarathonOverlay.exe"
+    "build:exe": "pkg . --output dist/MarathonOverlay.exe",
+    "check-youtube": "node scripts/check-youtube.js"
   },
   "engines": {
     "node": ">=18"

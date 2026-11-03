@@ -6,16 +6,26 @@ const { WebSocketServer } = require('ws');
 const config = require('./src/config');
 const state = require('./src/state');
 const auth = require('./src/auth');
+const adminAuth = require('./src/admin-auth');
 const { YouTubeChat, parseMessage } = require('./src/youtube');
 const { YouTubeScraper } = require('./src/scraper');
 
 const PORT = Number(process.env.PORT) || 3000;
 // Default hanya bisa diakses dari PC ini. Set HOST=0.0.0.0 kalau OBS ada di PC lain.
 const HOST = process.env.HOST || '127.0.0.1';
-const REDIRECT_URI = `http://localhost:${PORT}/oauth2callback`;
+// Di cloud, PUBLIC_URL (mis. https://marathon.example.com) dipakai untuk redirect login YouTube API.
+const PUBLIC_URL = String(process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/+$/, '');
+const REDIRECT_URI = `${PUBLIC_URL}/oauth2callback`;
 
 const app = express();
+// Di belakang reverse proxy (Caddy): IP asli & HTTPS dibaca dari header X-Forwarded-*.
+app.set('trust proxy', 1);
 app.use(express.json());
+app.use(adminAuth.protect);
+app.post('/login', adminAuth.login);
+app.post('/logout', adminAuth.logout);
+app.get('/api/session', (req, res) => res.json(adminAuth.status(req)));
+app.get('/', (req, res) => res.redirect('/control.html'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const server = http.createServer(app);
@@ -42,7 +52,7 @@ function broadcast(type, data) {
 
 function youtubeStatus() {
   const source = config.get().source;
-  if (source === 'scraper') return { ...scraper.getStatus(), source };
+  if (source === 'scraper') return { ...scraper.getStatus(), source, autoConnect: autoConnectStatus() };
   return { ...yt.getStatus(), source, hasCredentials: auth.hasCredentials(), authorized: auth.isAuthorized() };
 }
 
@@ -65,6 +75,51 @@ for (const source of [yt, scraper]) {
 }
 
 setInterval(() => state.tick(), 1000);
+
+// --- Auto-connect --------------------------------------------------------------
+// Kalau Channel diisi (Pengaturan atau env YT_CHANNEL), cek tiap menit apakah channel sedang live
+// dan connect sendiri. Live yang baru diputus manual / sudah berakhir tidak di-connect ulang.
+
+const AUTO_CONNECT_MS = 60 * 1000;
+let autoCheckedAt = null;
+let autoChecking = false;
+let lastVideoId = null;
+let skipVideoId = null;
+
+function autoConnectStatus() {
+  const { channel } = config.get();
+  return { enabled: Boolean(channel), channel, lastCheckAt: autoCheckedAt };
+}
+
+scraper.on('status', (s) => {
+  if (s.connected) lastVideoId = s.videoId;
+  else if (lastVideoId) {
+    skipVideoId = lastVideoId;
+    lastVideoId = null;
+  }
+});
+
+async function autoConnect() {
+  const { channel, source } = config.get();
+  if (!channel || source !== 'scraper' || scraper.getStatus().connected || autoChecking) return;
+  autoChecking = true;
+  try {
+    const { videoId } = await scraper.resolveVideo(channel);
+    if (videoId !== skipVideoId && !scraper.getStatus().connected) {
+      console.log(`[auto-connect] ${channel} sedang live (${videoId}), menghubungkan…`);
+      await scraper.connect(videoId);
+    }
+  } catch {
+    // Belum live (atau YouTube sedang tidak bisa diakses): coba lagi di pengecekan berikutnya.
+  } finally {
+    autoChecking = false;
+    autoCheckedAt = Date.now();
+    broadcast('youtube', youtubeStatus());
+  }
+}
+
+setInterval(autoConnect, AUTO_CONNECT_MS);
+setTimeout(autoConnect, 3000);
 
 // --- REST API untuk control panel --------------------------------------------
 
