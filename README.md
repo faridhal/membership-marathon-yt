@@ -52,7 +52,7 @@ http://localhost:3000/overlay-timer.html?label=SUBATHON&accent=%2300d1ff&size=11
 
 Judul timer (default `MARATHON`) diatur di **control panel → Pengaturan → Judul timer**; kosongkan untuk menyembunyikan. Saat ada event, angka timer disembunyikan sementara dan diganti `+10:00 / nama / jenis event`, lalu timer muncul lagi.
 
-**Bahasa:** teks overlay (Hours/Jam, PAUSED/JEDA, "remaining to achieve", dst.) bisa English atau Indonesia lewat **Pengaturan → Bahasa overlay**. Bahasa control panel dipilih terpisah di pojok kanan atas dan diingat per browser. Teks dari server (pesan error) tetap Bahasa Indonesia.
+**Bahasa:** teks overlay (Hours/Jam, PAUSED/JEDA, "remaining to achieve", dst.) bisa English atau Indonesia lewat **Pengaturan → Bahasa overlay** (default English). Bahasa control panel (default English) dipilih terpisah di pojok kanan atas dan diingat per browser. Teks dari server (pesan error) tetap Bahasa Indonesia.
 
 Judul kartu milestone = label milestone yang sedang dikejar. Kalau ada lebih dari 1 milestone, daftar semua milestone tampil di atasnya dengan centang untuk yang sudah tercapai. **Bonus menit** per milestone (ikon piala) otomatis ditambahkan ke timer saat milestone tercapai karena member join/gift.
 

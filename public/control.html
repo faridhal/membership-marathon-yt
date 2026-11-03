@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -48,8 +48,8 @@
     <h1>⏱ Marathon Control</h1>
     <span id="conn" class="pill bad" data-i18n="cp.disconnected"></span>
     <select id="uiLang" style="margin-left:auto" aria-label="Language">
-      <option value="id">Bahasa Indonesia</option>
       <option value="en">English</option>
+      <option value="id">Bahasa Indonesia</option>
     </select>
   </header>
 
@@ -208,28 +208,33 @@
     let cfg = null;
     let lastYoutube = null;
 
-    // Bahasa control panel disimpan per browser; terpisah dari bahasa overlay (Pengaturan).
+    // Bahasa control panel (default English) disimpan per browser hanya saat dipilih manual;
+    // terpisah dari bahasa overlay (Pengaturan).
+    const UI_LANG_KEY = 'cpLanguage';
+
     function readUiLang() {
       try {
-        return localStorage.getItem('cpLang') || 'id';
+        return localStorage.getItem(UI_LANG_KEY) || 'en';
       } catch {
-        return 'id';
+        return 'en';
       }
     }
 
-    function setUiLang(lang) {
+    function setUiLang(lang, remember = false) {
       $('uiLang').value = I18n.setLang(lang);
-      try {
-        localStorage.setItem('cpLang', I18n.lang);
-      } catch {
-        // localStorage tidak tersedia: bahasa tetap berlaku sampai halaman ditutup
+      if (remember) {
+        try {
+          localStorage.setItem(UI_LANG_KEY, I18n.lang);
+        } catch {
+          // localStorage tidak tersedia: bahasa tetap berlaku sampai halaman ditutup
+        }
       }
       I18n.apply();
       if (current) renderState(current);
       if (lastYoutube) renderYoutube(lastYoutube);
     }
 
-    $('uiLang').onchange = () => setUiLang($('uiLang').value);
+    $('uiLang').onchange = () => setUiLang($('uiLang').value, true);
 
     async function api(path, body) {
       const res = await fetch(path, {
