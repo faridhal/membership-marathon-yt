@@ -2,19 +2,89 @@
 
 Overlay OBS untuk livestream marathon: timer hitung mundur yang **bertambah otomatis** setiap ada member YouTube join (durasi per tier bisa diatur), plus overlay **milestone** jumlah member dengan progress bar.
 
-- Member baru, upgrade, dan **gift membership** (gift 5 = 5× durasi tier) terdeteksi otomatis lewat YouTube Data API.
-- Alert animasi `+5:00 · nama · member baru (Tier)` di overlay timer.
+- Member baru, upgrade, dan **gift membership** (gift 5 = 5× durasi tier) terdeteksi otomatis dari live chat YouTube, tanpa kuota (YouTube Data API resmi tersedia sebagai cadangan).
+- Animasi event `+5:00 · nama · member baru (Tier)` di overlay timer.
 - Control panel: start/pause, tambah/kurang waktu, ubah jumlah member, simulasi event, edit tier & milestone.
 - State tersimpan di `data/state.json` — aman kalau server/OBS restart.
 
+## Persiapan: Node.js
+
+Proyek ini butuh **Node.js versi 18 atau lebih baru** (disarankan versi LTS terbaru).
+
+### Cek apakah Node.js sudah terpasang
+
+Buka terminal (Windows: **PowerShell** atau **Command Prompt**; macOS/Linux: **Terminal**), lalu jalankan:
+
+```bash
+node -v
+```
+
+```bash
+npm -v
+```
+
+- Muncul versi seperti `v22.16.0` dan `10.9.2` → Node.js sudah terpasang. Pastikan angka pertama versi node **18 atau lebih**, lalu lanjut ke [Menjalankan](#menjalankan).
+- Muncul error seperti `'node' is not recognized…` / `command not found: node`, atau versinya di bawah 18 → pasang Node.js dulu (langkah di bawah).
+
+### Cara install Node.js
+
+**Windows**
+
+- Cara termudah: buka <https://nodejs.org>, unduh versi **LTS** (Windows Installer `.msi`), jalankan, lalu klik *Next* sampai selesai (biarkan opsi default, termasuk *Add to PATH*).
+- Atau lewat terminal dengan winget (sudah ada di Windows 10/11):
+
+  ```bash
+  winget install OpenJS.NodeJS.LTS
+  ```
+
+**macOS**
+
+- Unduh installer **LTS** (`.pkg`) dari <https://nodejs.org>, atau dengan Homebrew:
+
+  ```bash
+  brew install node
+  ```
+
+**Linux**
+
+- Paling aman lewat [nvm](https://github.com/nvm-sh/nvm):
+
+  ```bash
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+  ```
+
+  Tutup dan buka lagi terminal, lalu:
+
+  ```bash
+  nvm install --lts
+  ```
+
+Setelah install, **tutup lalu buka lagi terminal**, kemudian ulangi `node -v` dan `npm -v` untuk memastikan berhasil.
+
+### Masalah umum
+
+- **`node` masih tidak dikenali setelah install** → tutup semua jendela terminal/VS Code lalu buka lagi; kalau masih, restart PC agar PATH ter-update.
+- **PowerShell: `npm.ps1 cannot be loaded because running scripts is disabled`** → jalankan sekali:
+
+  ```bash
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  ```
+
+  atau pakai Command Prompt, atau ketik `npm.cmd` sebagai ganti `npm`.
+
 ## Menjalankan
 
-Butuh Node.js 18+.
+Buka terminal di folder proyek ini (Windows: buka folder di File Explorer → klik kanan → *Open in Terminal*), lalu:
 
 ```bash
 npm install
+```
+
+```bash
 npm start
 ```
+
+`npm install` cukup sekali (atau setelah update proyek). Selanjutnya cukup `npm start`. Biarkan terminal tetap terbuka selama live; tutup terminal (atau tekan `Ctrl+C`) untuk mematikan server.
 
 Buka control panel: <http://localhost:3000/control.html>
 
