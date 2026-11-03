@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const { writeJsonAtomic } = require('./util');
+const { APP_DIR, writeJsonAtomic } = require('./util');
 
-const CONFIG_PATH = path.join(__dirname, '..', 'config.json');
+const CONFIG_PATH = path.join(APP_DIR, 'config.json');
 
 const DEFAULTS = {
   title: 'MARATHON',
@@ -25,6 +25,8 @@ function load() {
   try {
     return normalize(JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')));
   } catch (err) {
+    // Belum ada config.json (mis. pertama kali menjalankan exe): pakai default, dibuat saat Simpan.
+    if (err.code === 'ENOENT') return normalize({});
     console.warn('[config] gagal membaca config.json, pakai default:', err.message);
     return normalize({});
   }

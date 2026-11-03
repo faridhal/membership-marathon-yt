@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Hasil build exe
+dist/
+
 # Runtime data: state marathon, token OAuth, log event mentah
 data/
 *.tmp

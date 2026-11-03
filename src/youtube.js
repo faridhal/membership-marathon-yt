@@ -1,5 +1,6 @@
 const { EventEmitter } = require('events');
-const { google } = require('googleapis');
+// Hanya klien YouTube (bukan seluruh googleapis) supaya exe tetap kecil.
+const google = require('@googleapis/youtube');
 const config = require('./config');
 
 // Perkiraan biaya kuota satu panggilan liveChatMessages.list (kuota default: 10.000 unit/hari).

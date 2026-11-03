@@ -3,16 +3,30 @@
   "version": "1.0.0",
   "description": "Overlay marathon timer YouTube yang bertambah otomatis saat ada member join",
   "main": "server.js",
+  "bin": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:exe": "pkg . --output dist/MarathonOverlay.exe"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "@googleapis/youtube": "^40.0.2",
     "express": "^4.21.2",
-    "googleapis": "^144.0.0",
     "ws": "^8.18.0"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*"
+    ],
+    "targets": [
+      "node22-win-x64"
+    ],
+    "outputPath": "dist"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.25.0"
   }
 }

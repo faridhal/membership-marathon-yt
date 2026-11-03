@@ -20,6 +20,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });
+// Error listen (mis. port dipakai) diteruskan juga ke wss; ditangani di server.on('error') di bawah.
+wss.on('error', () => {});
 const yt = new YouTubeChat();
 const scraper = new YouTubeScraper();
 
@@ -198,10 +200,48 @@ try {
   console.warn('[auth]', err.message);
 }
 
+// Saat jalan dari MarathonOverlay.exe (double-click): buka control panel otomatis, dan jangan
+// biarkan jendela langsung tertutup kalau ada error supaya pesannya masih bisa dibaca.
+const IS_EXE = Boolean(process.pkg);
+const CONTROL_URL = `http://localhost:${PORT}/control.html`;
+
+function openControlPanel() {
+  if (!IS_EXE || process.env.NO_OPEN === '1') return;
+  require('child_process')
+    .spawn('cmd', ['/c', 'start', '', CONTROL_URL], { detached: true, stdio: 'ignore' })
+    .unref();
+}
+
+function exitAfterKeypress(code) {
+  if (!IS_EXE) process.exit(code);
+  console.log('\nTekan Enter untuk menutup jendela ini.');
+  process.stdin.resume();
+  process.stdin.once('data', () => process.exit(code));
+}
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    // Kemungkinan besar program sudah jalan: cukup buka control panel-nya.
+    console.log(`Port ${PORT} sudah dipakai, kemungkinan Marathon overlay sudah berjalan.`);
+    if (IS_EXE) {
+      openControlPanel();
+      setTimeout(() => process.exit(0), 1500);
+      return;
+    }
+  } else {
+    console.error('Server gagal berjalan:', err.message);
+  }
+  exitAfterKeypress(1);
+});
+
 server.listen(PORT, HOST, () => {
   const base = `http://localhost:${PORT}`;
   console.log('Marathon overlay berjalan:');
   console.log(`  Control panel     : ${base}/control.html`);
   console.log(`  Overlay timer     : ${base}/overlay-timer.html`);
   console.log(`  Overlay milestone : ${base}/overlay-milestone.html`);
+  if (IS_EXE) {
+    console.log('\nJangan tutup jendela ini selama live. Tutup jendela untuk mematikan server.');
+    openControlPanel();
+  }
 });

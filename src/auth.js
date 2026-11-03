@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-const { google } = require('googleapis');
-const { DATA_DIR, writeJsonAtomic, readJson } = require('./util');
+// Hanya klien YouTube (bukan seluruh googleapis) supaya exe tetap kecil.
+const google = require('@googleapis/youtube');
+const { APP_DIR, DATA_DIR, writeJsonAtomic, readJson } = require('./util');
 
-const CREDENTIALS_PATH = path.join(__dirname, '..', 'credentials.json');
+const CREDENTIALS_PATH = path.join(APP_DIR, 'credentials.json');
 const TOKEN_PATH = path.join(DATA_DIR, 'token.json');
 const SCOPES = ['https://www.googleapis.com/auth/youtube.readonly'];
 

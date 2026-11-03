@@ -7,7 +7,36 @@ Overlay OBS untuk livestream marathon: timer hitung mundur yang **bertambah otom
 - Control panel: start/pause, tambah/kurang waktu, ubah jumlah member, simulasi event, edit tier & milestone.
 - State tersimpan di `data/state.json` — aman kalau server/OBS restart.
 
+## Cara cepat: `MarathonOverlay.exe` (Windows, tanpa install Node.js)
+
+1. Taruh `MarathonOverlay.exe` di **folder sendiri** (mis. `D:\Marathon\`).
+2. Double-click. Jendela hitam (server) muncul dan control panel otomatis terbuka di browser.
+3. **Jangan tutup jendela hitam itu selama live.** Tutup jendela tersebut untuk mematikan server.
+
+Catatan:
+- `config.json` dan folder `data/` (state marathon) dibuat di folder yang sama dengan exe. Untuk pindah PC di tengah marathon, salin exe **beserta** `config.json` dan `data/`.
+- Kalau muncul peringatan **"Windows protected your PC"** (SmartScreen, karena exe tidak ditandatangani): klik **More info → Run anyway**.
+- Double-click lagi saat server sudah jalan hanya membuka control panel, bukan menjalankan server kedua.
+- Mode YouTube API resmi: letakkan `credentials.json` di samping exe.
+- Selebihnya (pasang di OBS, menghubungkan YouTube, dst.) sama seperti di bawah.
+
+### Build exe sendiri
+
+Butuh Node.js (lihat bagian berikut). Di folder proyek:
+
+```bash
+npm install
+```
+
+```bash
+npm run build:exe
+```
+
+Hasilnya `dist/MarathonOverlay.exe` (±70 MB, sudah berisi Node.js dan semua file overlay).
+
 ## Persiapan: Node.js
+
+> Tidak perlu kalau kamu memakai `MarathonOverlay.exe`.
 
 Proyek ini butuh **Node.js versi 18 atau lebih baru** (disarankan versi LTS terbaru).
 
