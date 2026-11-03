@@ -46,36 +46,40 @@
 <body>
   <header>
     <h1>⏱ Marathon Control</h1>
-    <span id="conn" class="pill bad">Terputus</span>
+    <span id="conn" class="pill bad" data-i18n="cp.disconnected"></span>
+    <select id="uiLang" style="margin-left:auto" aria-label="Language">
+      <option value="id">Bahasa Indonesia</option>
+      <option value="en">English</option>
+    </select>
   </header>
 
   <main>
     <section>
-      <h2>Timer</h2>
+      <h2 data-i18n="cp.timer"></h2>
       <div class="big" id="timer">00:00:00</div>
       <div class="muted" id="timerStatus"></div>
       <div class="row">
-        <button class="primary" id="btnStart">▶ Start</button>
-        <button id="btnPause">⏸ Pause</button>
-        <button class="danger" id="btnReset">Reset timer</button>
+        <button class="primary" id="btnStart" data-i18n="cp.start"></button>
+        <button id="btnPause" data-i18n="cp.pause"></button>
+        <button class="danger" id="btnReset" data-i18n="cp.resetTimer"></button>
       </div>
       <div class="row">
         <button data-add="-300">−5m</button>
         <button data-add="-60">−1m</button>
         <button data-add="60">+1m</button>
         <button data-add="300">+5m</button>
-        <button data-add="3600">+1j</button>
+        <button data-add="3600">+1h</button>
       </div>
       <div class="row">
-        <label>Jam <input type="number" id="setH" min="0" value="1"></label>
-        <label>Menit <input type="number" id="setM" min="0" max="59" value="0"></label>
-        <button id="btnSet">Set waktu</button>
-        <button id="btnAddCustom">Tambah</button>
+        <label><span data-i18n="cp.hours"></span> <input type="number" id="setH" min="0" value="1"></label>
+        <label><span data-i18n="cp.minutes"></span> <input type="number" id="setM" min="0" max="59" value="0"></label>
+        <button id="btnSet" data-i18n="cp.setTime"></button>
+        <button id="btnAddCustom" data-i18n="cp.add"></button>
       </div>
     </section>
 
     <section>
-      <h2>Member & Milestone</h2>
+      <h2 data-i18n="cp.members"></h2>
       <div class="big" id="count">0</div>
       <div class="muted" id="msText"></div>
       <div class="bar" style="margin:8px 0"><div id="msBar"></div></div>
@@ -83,115 +87,149 @@
         <button data-count="-1">−1</button>
         <button data-count="1">+1</button>
         <input type="number" id="setCount" min="0" value="0">
-        <button id="btnSetCount">Set jumlah</button>
+        <button id="btnSetCount" data-i18n="cp.setCount"></button>
       </div>
       <div class="row">
-        <button class="danger" id="btnResetAll">Reset marathon (timer, member, log)</button>
+        <button class="danger" id="btnResetAll" data-i18n="cp.resetAll"></button>
       </div>
     </section>
 
     <section>
       <h2>YouTube</h2>
       <div class="row">
-        <label>Sumber
+        <label><span data-i18n="cp.source"></span>
           <select id="ytSource">
-            <option value="scraper">Live chat langsung (tanpa kuota)</option>
-            <option value="api">YouTube API resmi (kuota 10.000/hari)</option>
+            <option value="scraper" data-i18n="cp.sourceScraper"></option>
+            <option value="api" data-i18n="cp.sourceApi"></option>
           </select>
         </label>
       </div>
-      <div class="row">Status: <span id="ytPill" class="pill">-</span></div>
+      <div class="row"><span data-i18n="cp.status"></span> <span id="ytPill" class="pill">-</span></div>
       <div class="muted" id="ytInfo"></div>
       <div class="err" id="ytErr"></div>
       <div class="row" id="apiRow">
-        <a href="/auth"><button id="btnLogin">Login YouTube</button></a>
-        <button class="danger" id="btnLogout">Logout</button>
+        <a href="/auth"><button id="btnLogin" data-i18n="cp.loginYt"></button></a>
+        <button class="danger" id="btnLogout" data-i18n="cp.logout"></button>
       </div>
       <div class="row">
-        <input id="videoId" placeholder="Video ID / URL / @channel (opsional)" style="flex:1">
-        <button class="primary" id="btnConnect">Connect</button>
-        <button id="btnDisconnect">Disconnect</button>
+        <input id="videoId" data-i18n-placeholder="cp.videoPlaceholder" style="flex:1">
+        <button class="primary" id="btnConnect" data-i18n="cp.connect"></button>
+        <button id="btnDisconnect" data-i18n="cp.disconnect"></button>
       </div>
       <div class="muted" id="ytHint"></div>
     </section>
 
     <section>
-      <h2>Simulasi (tes tanpa live)</h2>
+      <h2 data-i18n="cp.simulate"></h2>
       <div class="row">
         <select id="simKind">
-          <option value="new">Member baru</option>
-          <option value="gift">Gift membership</option>
-          <option value="upgrade">Upgrade tier</option>
-          <option value="milestone">Perpanjang (milestone chat)</option>
+          <option value="new" data-i18n="cp.simNew"></option>
+          <option value="gift" data-i18n="cp.simGift"></option>
+          <option value="upgrade" data-i18n="cp.simUpgrade"></option>
+          <option value="milestone" data-i18n="cp.simMilestone"></option>
         </select>
         <select id="simTier"></select>
       </div>
       <div class="row">
-        <input id="simAuthor" placeholder="Nama" value="Penonton Tes" style="flex:1">
-        <label>Jumlah gift <input type="number" id="simCount" min="1" value="5"></label>
+        <input id="simAuthor" data-i18n-placeholder="cp.simName" value="Test Viewer" style="flex:1">
+        <label><span data-i18n="cp.simCount"></span> <input type="number" id="simCount" min="1" value="5"></label>
       </div>
-      <div class="row"><button class="primary" id="btnSim">Kirim event tes</button></div>
+      <div class="row"><button class="primary" id="btnSim" data-i18n="cp.simSend"></button></div>
     </section>
 
     <section style="grid-column: 1 / -1">
-      <h2>Pengaturan</h2>
+      <h2 data-i18n="cp.settings"></h2>
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px">
         <div>
-          <strong>Tier membership</strong>
-          <div class="muted">Nama harus sama persis dengan nama level di YouTube Studio.</div>
+          <strong data-i18n="cp.tiers"></strong>
+          <div class="muted" data-i18n="cp.tiersHint"></div>
           <table>
-            <thead><tr><th>Nama tier</th><th>Menit</th><th>Detik</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="cp.tierName"></th><th data-i18n="cp.minutes"></th><th data-i18n="cp.seconds"></th><th></th></tr></thead>
             <tbody id="tierRows"></tbody>
           </table>
           <button id="btnAddTier">+ Tier</button>
         </div>
         <div>
-          <strong>Milestone</strong>
+          <strong data-i18n="cp.milestones"></strong>
           <table>
-            <thead><tr><th>Target member</th><th>Hadiah / label</th><th>Bonus menit</th><th></th></tr></thead>
+            <thead><tr><th data-i18n="cp.msTarget"></th><th data-i18n="cp.msLabel"></th><th data-i18n="cp.msBonus"></th><th></th></tr></thead>
             <tbody id="msRows"></tbody>
           </table>
           <button id="btnAddMs">+ Milestone</button>
         </div>
         <div>
-          <strong>Lainnya</strong>
-          <div class="row"><label>Judul timer (kosong = sembunyikan) <input id="cfgTitle" placeholder="MARATHON"></label></div>
-          <div class="row"><label>Channel YouTube <input id="cfgChannel" placeholder="@channelkamu"></label></div>
-          <div class="row"><label>Tier untuk gift membership <select id="cfgGiftTier"></select></label></div>
-          <div class="row"><label>Tier tidak dikenal (detik) <input type="number" id="cfgDefault" min="0"></label></div>
-          <div class="row"><label><input type="checkbox" id="cfgUpgrades"> Upgrade tier menambah waktu</label></div>
-          <div class="row"><label>Perpanjang member (detik) <input type="number" id="cfgMilestoneChat" min="0"></label></div>
-          <div class="row"><label>Batas maks. sisa waktu (menit, 0 = tanpa batas) <input type="number" id="cfgMax" min="0"></label></div>
-          <div class="row"><label>Interval polling YouTube (detik) <input type="number" id="cfgPoll" min="5"></label></div>
+          <strong data-i18n="cp.other"></strong>
+          <div class="row">
+            <label><span data-i18n="cp.overlayLang"></span>
+              <select id="cfgLanguage">
+                <option value="en">English</option>
+                <option value="id">Bahasa Indonesia</option>
+              </select>
+            </label>
+          </div>
+          <div class="row"><label><span data-i18n="cp.title"></span> <input id="cfgTitle" placeholder="MARATHON"></label></div>
+          <div class="row"><label><span data-i18n="cp.channel"></span> <input id="cfgChannel" placeholder="@channel"></label></div>
+          <div class="row"><label><span data-i18n="cp.giftTier"></span> <select id="cfgGiftTier"></select></label></div>
+          <div class="row"><label><span data-i18n="cp.defaultSeconds"></span> <input type="number" id="cfgDefault" min="0"></label></div>
+          <div class="row"><label><input type="checkbox" id="cfgUpgrades"> <span data-i18n="cp.countUpgrades"></span></label></div>
+          <div class="row"><label><span data-i18n="cp.milestoneChat"></span> <input type="number" id="cfgMilestoneChat" min="0"></label></div>
+          <div class="row"><label><span data-i18n="cp.maxDuration"></span> <input type="number" id="cfgMax" min="0"></label></div>
+          <div class="row"><label><span data-i18n="cp.pollInterval"></span> <input type="number" id="cfgPoll" min="5"></label></div>
           <div class="muted" id="quotaInfo"></div>
         </div>
       </div>
       <div class="row" style="margin-top:16px">
-        <button class="primary" id="btnSave">Simpan pengaturan</button>
+        <button class="primary" id="btnSave" data-i18n="cp.save"></button>
         <span class="muted" id="saveMsg"></span>
       </div>
     </section>
 
     <section>
-      <h2>Log event</h2>
+      <h2 data-i18n="cp.log"></h2>
       <div class="log" id="log"></div>
     </section>
 
     <section class="links">
-      <h2>URL Browser Source OBS</h2>
-      <div class="muted">Timer (disarankan 900×300)</div>
+      <h2 data-i18n="cp.obsUrls"></h2>
+      <div class="muted" data-i18n="cp.urlTimer"></div>
       <code id="urlTimer"></code>
-      <div class="muted">Milestone (disarankan 700×200)</div>
+      <div class="muted" data-i18n="cp.urlMs"></div>
       <code id="urlMs"></code>
-      <div class="muted">Opsi URL: <b>?label=</b>Judul, <b>&amp;color=</b>%23ffffff, <b>&amp;accent=</b>%23ff4d6d, <b>&amp;size=</b>88, <b>&amp;font=</b>Rubik, <b>&amp;alertMs=</b>5000</div>
+      <div class="muted" data-i18n="cp.urlOptions"></div>
     </section>
   </main>
 
   <script src="js/ws-client.js"></script>
+  <script src="js/i18n.js"></script>
   <script>
     const $ = (id) => document.getElementById(id);
+    const t = I18n.t;
     let current = null;
     let cfg = null;
+    let lastYoutube = null;
+
+    // Bahasa control panel disimpan per browser; terpisah dari bahasa overlay (Pengaturan).
+    function readUiLang() {
+      try {
+        return localStorage.getItem('cpLang') || 'id';
+      } catch {
+        return 'id';
+      }
+    }
+
+    function setUiLang(lang) {
+      $('uiLang').value = I18n.setLang(lang);
+      try {
+        localStorage.setItem('cpLang', I18n.lang);
+      } catch {
+        // localStorage tidak tersedia: bahasa tetap berlaku sampai halaman ditutup
+      }
+      I18n.apply();
+      if (current) renderState(current);
+      if (lastYoutube) renderYoutube(lastYoutube);
+    }
+
+    $('uiLang').onchange = () => setUiLang($('uiLang').value);
 
     async function api(path, body) {
       const res = await fetch(path, {
@@ -207,7 +245,7 @@
     // --- Timer ---
     $('btnStart').onclick = () => api('/api/timer/start');
     $('btnPause').onclick = () => api('/api/timer/pause');
-    $('btnReset').onclick = () => confirm('Reset timer ke 00:00:00?') && api('/api/timer/reset');
+    $('btnReset').onclick = () => confirm(t('cp.confirmResetTimer')) && api('/api/timer/reset');
     document.querySelectorAll('[data-add]').forEach((b) => {
       b.onclick = () => api('/api/timer/add', { seconds: Number(b.dataset.add) });
     });
@@ -219,7 +257,7 @@
       if (current) {
         const ms = Marathon.remainingMs(current);
         $('timer').textContent = Marathon.formatTime(ms);
-        $('timerStatus').textContent = ms <= 0 ? 'Timer habis / belum di-set' : current.running ? 'Berjalan' : 'Pause';
+        $('timerStatus').textContent = ms <= 0 ? t('cp.timerEmpty') : current.running ? t('cp.running') : t('cp.pausedStatus');
       }
       requestAnimationFrame(tick);
     }
@@ -231,59 +269,59 @@
     });
     $('btnSetCount').onclick = () => api('/api/count', { set: Number($('setCount').value) });
     $('btnResetAll').onclick = () =>
-      confirm('Mulai marathon baru? Timer, jumlah member, dan log akan dikosongkan.') && api('/api/reset-all');
+      confirm(t('cp.confirmResetAll')) && api('/api/reset-all');
 
     // --- YouTube ---
     $('btnConnect').onclick = () => api('/api/youtube/connect', { videoId: $('videoId').value });
     $('btnDisconnect').onclick = () => api('/api/youtube/disconnect');
-    $('btnLogout').onclick = () => confirm('Logout dari YouTube?') && api('/api/youtube/logout');
+    $('btnLogout').onclick = () => confirm(t('cp.confirmLogout')) && api('/api/youtube/logout');
 
     // Ganti sumber langsung menyimpan config (field lain tetap dari config terakhir).
     $('ytSource').onchange = () => api('/api/config', { ...cfg, source: $('ytSource').value });
 
     function renderYoutube(y) {
+      lastYoutube = y;
       const pill = $('ytPill');
       const isApi = y.source === 'api';
       $('ytSource').value = y.source;
       $('apiRow').hidden = !isApi;
       $('quotaInfo').hidden = !isApi;
-      $('ytHint').textContent = isApi
-        ? 'Kosongkan untuk otomatis memakai siaran live yang sedang aktif di channel yang login.'
-        : 'Kosongkan untuk otomatis mencari live di Channel (Pengaturan). Tidak perlu login.';
+      $('ytHint').textContent = t(isApi ? 'cp.hintApi' : 'cp.hintScraper');
+
+      const lastCheck = y.lastPollAt ? t('cp.lastCheck', { time: new Date(y.lastPollAt).toLocaleTimeString() }) : null;
 
       if (!isApi) {
-        pill.textContent = y.connected ? 'Terhubung ke live chat' : 'Belum connect';
+        pill.textContent = t(y.connected ? 'cp.ytConnected' : 'cp.ytNotConnected');
         pill.className = y.connected ? 'pill ok' : 'pill';
         const info = [];
         if (y.title) info.push(`Live: ${y.title}`);
         if (y.videoId) info.push(`Video: ${y.videoId}`);
-        if (y.lastPollAt) info.push(`Cek terakhir: ${new Date(y.lastPollAt).toLocaleTimeString()}`);
+        if (lastCheck) info.push(lastCheck);
         $('ytInfo').textContent = info.join(' · ');
         $('ytErr').textContent = y.lastError || '';
         return;
       }
 
       if (!y.hasCredentials) {
-        pill.textContent = 'credentials.json belum ada';
+        pill.textContent = t('cp.ytNoCreds');
         pill.className = 'pill bad';
       } else if (!y.authorized) {
-        pill.textContent = 'Belum login';
+        pill.textContent = t('cp.ytNotLoggedIn');
         pill.className = 'pill bad';
       } else if (y.connected) {
-        pill.textContent = 'Terhubung ke live chat';
+        pill.textContent = t('cp.ytConnected');
         pill.className = 'pill ok';
       } else {
-        pill.textContent = 'Login OK, belum connect';
+        pill.textContent = t('cp.ytLoggedIn');
         pill.className = 'pill';
       }
       const info = [];
       if (y.title) info.push(`Live: ${y.title}`);
-      if (y.lastPollAt) info.push(`Poll terakhir: ${new Date(y.lastPollAt).toLocaleTimeString()}`);
-      info.push(`Kuota terpakai hari ini ≈ ${y.unitsToday} / 10.000 unit`);
+      if (lastCheck) info.push(lastCheck);
+      info.push(t('cp.quotaToday', { units: y.unitsToday }));
       $('ytInfo').textContent = info.join(' · ');
       $('ytErr').textContent = y.lastError || '';
-      $('quotaInfo').textContent =
-        `Dengan interval ini: ≈ ${y.unitsPerHour} unit/jam → kuota default 10.000 cukup ±${y.hoursUntilDefaultQuota} jam.`;
+      $('quotaInfo').textContent = t('cp.quotaInfo', { perHour: y.unitsPerHour, hours: y.hoursUntilDefaultQuota });
     }
 
     // --- Simulasi ---
@@ -325,12 +363,12 @@
       cfg = c;
       $('tierRows').replaceChildren(...c.tiers.map(tierRow));
       $('msRows').replaceChildren(...c.milestones.map(msRow));
+      $('cfgLanguage').value = c.language;
       $('cfgTitle').value = c.title;
       $('cfgChannel').value = c.channel;
-      $('cfgGiftTier').replaceChildren(
-        new Option('(tier pertama)', ''),
-        ...c.tiers.map((t) => new Option(t.name, t.name))
-      );
+      const firstTier = new Option(t('cp.firstTier'), '');
+      firstTier.dataset.i18n = 'cp.firstTier';
+      $('cfgGiftTier').replaceChildren(firstTier, ...c.tiers.map((tier) => new Option(tier.name, tier.name)));
       $('cfgGiftTier').value = c.giftTier;
       $('cfgDefault').value = c.defaultSeconds;
       $('cfgUpgrades').checked = c.countUpgrades;
@@ -340,8 +378,10 @@
 
       const sel = $('simTier');
       const prev = sel.value;
-      sel.replaceChildren(...c.tiers.map((t) => new Option(`${t.name} (${Marathon.formatAdded(t.seconds)})`, t.name)));
-      sel.append(new Option('(tier tidak dikenal)', 'Tier Lain'));
+      sel.replaceChildren(...c.tiers.map((tier) => new Option(`${tier.name} (${Marathon.formatAdded(tier.seconds)})`, tier.name)));
+      const unknown = new Option(t('cp.unknownTier'), 'Tier Lain');
+      unknown.dataset.i18n = 'cp.unknownTier';
+      sel.append(unknown);
       if (prev) sel.value = prev;
     }
 
@@ -360,6 +400,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: $('cfgTitle').value,
+          language: $('cfgLanguage').value,
           source: cfg.source,
           channel: $('cfgChannel').value,
           giftTier: $('cfgGiftTier').value,
@@ -372,19 +413,23 @@
           pollIntervalSec: Number($('cfgPoll').value),
         }),
       }).then((r) => r.json());
-      $('saveMsg').textContent = res.ok ? `Tersimpan ${new Date().toLocaleTimeString()}` : res.error;
+      $('saveMsg').textContent = res.ok ? t('cp.saved', { time: new Date().toLocaleTimeString() }) : res.error;
     };
 
     // --- Render state ---
-    const kindLabel = { new: 'member baru', gift: 'gift', upgrade: 'upgrade', milestone: 'perpanjang', bonus: 'bonus milestone' };
-
     function renderState(s) {
       current = s;
       $('count').textContent = s.memberCount;
       const m = s.milestones;
       $('msText').textContent = m.next
-        ? `${s.memberCount} / ${m.next.target} → ${m.next.label || 'milestone berikut'} (${m.reachedCount}/${m.list.length} tercapai)`
-        : m.allDone ? 'Semua milestone tercapai 🎉' : 'Belum ada milestone';
+        ? t('cp.msNext', {
+          count: s.memberCount,
+          target: m.next.target,
+          label: m.next.label || t('cp.msNextFallback'),
+          reached: m.reachedCount,
+          total: m.list.length,
+        })
+        : t(m.allDone ? 'cp.msAllDone' : 'cp.msNone');
       $('msBar').style.width = `${m.progress * 100}%`;
 
       $('log').replaceChildren(
@@ -392,20 +437,30 @@
           const div = document.createElement('div');
           const count = h.kind === 'gift' ? ` ×${h.count}` : '';
           div.textContent =
-            `${new Date(h.at).toLocaleTimeString()} · ${h.author} · ${kindLabel[h.kind] || h.kind}${count}` +
-            `${h.tier ? ` (${h.tier})` : ''} · ${h.seconds ? Marathon.formatAdded(h.seconds) : '+0'}${h.simulated ? ' · TES' : ''}`;
+            `${new Date(h.at).toLocaleTimeString()} · ${h.author} · ${t(`cp.kind.${h.kind}`)}${count}` +
+            `${h.tier ? ` (${h.tier})` : ''} · ${h.seconds ? Marathon.formatAdded(h.seconds) : '+0'}` +
+            `${h.simulated ? ` · ${t('cp.test')}` : ''}`;
           return div;
         })
       );
-      if (!s.history.length) $('log').textContent = 'Belum ada event.';
+      if (!s.history.length) $('log').textContent = t('cp.noEvents');
     }
 
+    setUiLang(readUiLang());
     $('urlTimer').textContent = `${location.origin}/overlay-timer.html`;
     $('urlMs').textContent = `${location.origin}/overlay-milestone.html`;
 
     Marathon.connect({
-      open() { $('conn').textContent = 'Terhubung ke server'; $('conn').className = 'pill ok'; },
-      close() { $('conn').textContent = 'Terputus, mencoba lagi…'; $('conn').className = 'pill bad'; },
+      open() {
+        $('conn').dataset.i18n = 'cp.connected';
+        $('conn').textContent = t('cp.connected');
+        $('conn').className = 'pill ok';
+      },
+      close() {
+        $('conn').dataset.i18n = 'cp.disconnected';
+        $('conn').textContent = t('cp.disconnected');
+        $('conn').className = 'pill bad';
+      },
       state: renderState,
       config: renderConfig,
       youtube: renderYoutube,

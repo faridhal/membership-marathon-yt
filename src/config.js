@@ -6,6 +6,7 @@ const CONFIG_PATH = path.join(__dirname, '..', 'config.json');
 
 const DEFAULTS = {
   title: 'MARATHON',
+  language: 'en',
   source: 'scraper',
   channel: '',
   giftTier: '',
@@ -39,6 +40,8 @@ function normalize(raw) {
   const c = { ...DEFAULTS, ...raw };
   return {
     title: String(c.title ?? '').trim(),
+    // Bahasa teks di overlay: 'en' atau 'id'.
+    language: c.language === 'id' ? 'id' : 'en',
     // 'scraper' = baca live chat langsung (tanpa kuota), 'api' = YouTube Data API resmi.
     source: c.source === 'api' ? 'api' : 'scraper',
     channel: String(c.channel || '').trim(),

@@ -170,6 +170,72 @@ body {
   background: var(--panel);
 }
 
+.ms-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ms-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 0.55;
+}
+
+.ms-list li.done {
+  opacity: 0.85;
+}
+
+.ms-list li.done .ms-item-label {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.ms-list li.current {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.ms-check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.ms-list li.done .ms-check {
+  background: var(--text);
+  border-color: var(--text);
+}
+
+.ms-check svg {
+  width: 12px;
+  height: 12px;
+  fill: #1c1c1e;
+}
+
+.ms-item-label {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+}
+
+.ms-item-target {
+  font-variant-numeric: tabular-nums;
+}
+
 .ms-title {
   font-size: 18px;
   font-weight: 700;

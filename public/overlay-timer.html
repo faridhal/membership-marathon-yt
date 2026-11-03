@@ -10,11 +10,11 @@
     <div class="timer-title" id="title" hidden></div>
     <div class="stage" id="stage">
       <div class="clock" id="clock">
-        <div class="group"><div class="num" id="h"><span>0</span><span>0</span></div><div class="cap" id="capH">Hours</div></div>
+        <div class="group"><div class="num" id="h"><span>0</span><span>0</span></div><div class="cap" id="capH" data-i18n="timer.hours">Hours</div></div>
         <div class="colon">:</div>
-        <div class="group"><div class="num" id="m"><span>0</span><span>0</span></div><div class="cap" id="capM">Minutes</div></div>
+        <div class="group"><div class="num" id="m"><span>0</span><span>0</span></div><div class="cap" id="capM" data-i18n="timer.minutes">Minutes</div></div>
         <div class="colon">:</div>
-        <div class="group"><div class="num" id="s"><span>0</span><span>0</span></div><div class="cap" id="capS">Seconds</div></div>
+        <div class="group"><div class="num" id="s"><span>0</span><span>0</span></div><div class="cap" id="capS" data-i18n="timer.seconds">Seconds</div></div>
       </div>
       <div class="event" id="event">
         <div class="ev-plus" id="evPlus"></div>
@@ -26,6 +26,7 @@
   </div>
 
   <script src="js/ws-client.js"></script>
+  <script src="js/i18n.js"></script>
   <script>
     const q = Marathon.applyQueryStyle();
     const ALERT_MS = Number(q.get('alertMs')) || 5000;
@@ -36,6 +37,7 @@
       const caps = q.get('caps').split(',');
       ['capH', 'capM', 'capS'].forEach((id, i) => {
         const el = document.getElementById(id);
+        delete el.dataset.i18n; // teks custom tidak ikut diterjemahkan
         el.textContent = caps[i] || '';
         el.hidden = !caps[i];
       });
@@ -44,6 +46,13 @@
     const $ = (id) => document.getElementById(id);
     const stage = $('stage');
     let current = null;
+
+    // Bahasa dari control panel (Pengaturan → Bahasa overlay); ?lang=en|id di URL menimpanya.
+    function setLanguage(lang) {
+      I18n.setLang(q.get('lang') || lang);
+      I18n.apply();
+    }
+    setLanguage('en');
 
     // Judul diatur dari control panel; ?label= di URL menimpanya. Kosong = disembunyikan.
     function setTitle(text) {
@@ -70,7 +79,7 @@
         setDigits($('s'), s);
         const ended = ms <= 0;
         $('clock').classList.toggle('paused', !current.running && !ended);
-        const status = ended ? 'SELESAI' : current.running ? '' : 'PAUSED';
+        const status = ended ? I18n.t('timer.ended') : current.running ? '' : I18n.t('timer.paused');
         $('status').textContent = status;
         $('status').hidden = !status;
       }
@@ -85,11 +94,9 @@
 
     function kindText(a) {
       const tier = a.tier ? ` · ${a.tier}` : '';
-      if (a.kind === 'gift') return `Gift ${a.count} member${tier}`;
-      if (a.kind === 'upgrade') return `Upgrade${tier}`;
-      if (a.kind === 'milestone') return `Perpanjang member${tier}`;
-      if (a.kind === 'bonus') return 'Milestone tercapai!';
-      return `Member baru${tier}`;
+      if (a.kind === 'bonus') return I18n.t('event.bonus');
+      const key = { gift: 'event.gift', upgrade: 'event.upgrade', milestone: 'event.milestone' }[a.kind] || 'event.new';
+      return I18n.t(key, { count: a.count }) + tier;
     }
 
     function showNext() {
@@ -113,7 +120,10 @@
 
     Marathon.connect({
       state(s) { current = s; },
-      config(c) { setTitle(c.title); },
+      config(c) {
+        setTitle(c.title);
+        setLanguage(c.language);
+      },
       alert(a) {
         if (q.get('alerts') === '0') return;
         queue.push(a);

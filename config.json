@@ -14,7 +14,7 @@
     },
     {
       "name": "Sultan",
-      "seconds": 1800
+      "seconds": 1560
     }
   ],
   "defaultSeconds": 300,
@@ -24,8 +24,13 @@
   "maxDurationSec": 0,
   "milestones": [
     {
-      "target": 1000,
+      "target": 150,
       "label": "BAYARIN SPP 5 ANAK SEKOLAH NEGERI UNTUK 1 BULAN",
+      "bonusMinutes": 0
+    },
+    {
+      "target": 350,
+      "label": "Test",
       "bonusMinutes": 0
     }
   ]

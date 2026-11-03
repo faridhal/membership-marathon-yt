@@ -7,6 +7,7 @@
 </head>
 <body>
   <div class="milestone" id="panel">
+    <ul class="ms-list" id="list" hidden></ul>
     <div class="ms-title" id="title">Belum ada milestone</div>
     <div class="ms-count" id="count">0 / 0 Member</div>
     <div class="bar"><div class="bar-fill" id="fill"></div></div>
@@ -20,6 +21,7 @@
   </div>
 
   <script src="js/ws-client.js"></script>
+  <script src="js/i18n.js"></script>
   <script>
     const q = Marathon.applyQueryStyle();
     // ?unit=Gift Member mengganti satuan, ?reward=0 menyembunyikan bonus waktu di pojok kanan bawah.
@@ -32,19 +34,59 @@
     const fillEl = document.getElementById('fill');
     const remainingEl = document.getElementById('remaining');
     const rewardTextEl = document.getElementById('rewardText');
+    const listEl = document.getElementById('list');
     let lastReached = null;
+    let lastState = null;
+
+    // Bahasa dari control panel (Pengaturan → Bahasa overlay); ?lang=en|id di URL menimpanya.
+    function setLanguage(lang) {
+      I18n.setLang(q.get('lang') || lang);
+      if (lastState) render(lastState);
+    }
+    setLanguage('en');
+
+    // Daftar semua milestone (hanya kalau lebih dari 1): ✓ untuk yang sudah tercapai,
+    // yang sedang dikejar ditandai, sisanya diredupkan. ?list=0 untuk menyembunyikan.
+    function renderList(m, count) {
+      const show = m.list.length > 1 && q.get('list') !== '0';
+      listEl.hidden = !show;
+      if (!show) return;
+
+      listEl.replaceChildren(
+        ...m.list.map((item) => {
+          const done = item.target <= count;
+          const li = document.createElement('li');
+          li.className = done ? 'done' : m.next && item.target === m.next.target ? 'current' : '';
+          const check = document.createElement('span');
+          check.className = 'ms-check';
+          if (done) {
+            check.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>';
+          }
+          const label = document.createElement('span');
+          label.className = 'ms-item-label';
+          label.textContent = item.label || `${item.target} ${UNIT}`;
+          const target = document.createElement('span');
+          target.className = 'ms-item-target';
+          target.textContent = item.target;
+          li.append(check, label, target);
+          return li;
+        })
+      );
+    }
 
     function render(s) {
+      lastState = s;
       const m = s.milestones;
+      renderList(m, s.memberCount);
       // Tampilkan milestone yang sedang dikejar; kalau semua tercapai, tampilkan yang terakhir.
       const shown = m.next || m.list[m.list.length - 1];
 
       if (!shown) {
-        titleEl.textContent = 'Belum ada milestone';
+        titleEl.textContent = I18n.t('ms.none');
         countEl.textContent = `${s.memberCount} ${UNIT}`;
         fillEl.style.width = '0%';
         remainingEl.textContent = '';
-        rewardTextEl.textContent = '0 Minutes';
+        rewardTextEl.textContent = I18n.t('ms.minutes', { n: 0 });
         return;
       }
 
@@ -55,9 +97,9 @@
 
       const left = shown.target - s.memberCount;
       remainingEl.textContent = left > 0
-        ? `${left} ${UNIT.toLowerCase()} remaining to achieve`
-        : 'Milestone achieved!';
-      rewardTextEl.textContent = `${shown.bonusMinutes || 0} Minutes`;
+        ? I18n.t('ms.remaining', { n: left, unit: UNIT.toLowerCase() })
+        : I18n.t('ms.achieved');
+      rewardTextEl.textContent = I18n.t('ms.minutes', { n: shown.bonusMinutes || 0 });
 
       // Animasi saat milestone baru tercapai (bukan saat halaman baru dibuka).
       if (lastReached !== null && m.reachedCount > lastReached) {
@@ -68,7 +110,10 @@
       lastReached = m.reachedCount;
     }
 
-    Marathon.connect({ state: render });
+    Marathon.connect({
+      state: render,
+      config(c) { setLanguage(c.language); },
+    });
   </script>
 </body>
 </html>
